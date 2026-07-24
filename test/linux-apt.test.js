@@ -14,7 +14,7 @@ describe('linux apt installer', () => {
     );
     expect(script).toContain('CODENAME=$(lsb_release -cs 2>/dev/null || echo "bookworm")');
     expect(script).toContain(
-      'if ! curl -s --head https://pkg.cloudflareclient.com/dists/$CODENAME/Release | grep -q "200 OK"; then CODENAME="bookworm"; fi',
+      'if ! curl -fsS --head "https://pkg.cloudflareclient.com/dists/$CODENAME/Release" >/dev/null; then CODENAME="bookworm"; fi',
     );
     expect(script).toContain(
       'echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $CODENAME main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list',

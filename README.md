@@ -44,19 +44,21 @@ The Debian / Parrot OS path in the wizard intentionally follows the field-tested
 # Add Cloudflare GPG key and repo
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
 CODENAME=$(lsb_release -cs 2>/dev/null || echo "bookworm")
-if ! curl -s --head https://pkg.cloudflareclient.com/dists/$CODENAME/Release | grep -q "200 OK"; then CODENAME="bookworm"; fi
+if ! curl -fsS --head "https://pkg.cloudflareclient.com/dists/$CODENAME/Release" >/dev/null; then CODENAME="bookworm"; fi
 echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $CODENAME main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
 
 # Install WARP
 sudo apt-get update && sudo apt-get install cloudflare-warp
 
 # Register and connect
-warp-cli registration new
-warp-cli connect
+warp-cli --accept-tos registration new
+warp-cli --accept-tos connect
 
 # Verify connection
 curl https://www.cloudflare.com/cdn-cgi/trace | grep warp=on
 ```
+
+The wizard asks before passing Cloudflare WARP's `--accept-tos` flag. The flag is needed because the wizard spawns `warp-cli` non-interactively; without it, Cloudflare's CLI asks you to accept the Terms of Service in its own terminal session and exits.
 
 ## Platform Support
 

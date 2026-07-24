@@ -7,9 +7,29 @@ import { installArch } from '../platform/linux-arch.js';
 import { installOpenSuse } from '../platform/linux-opensuse.js';
 import { installMacos } from '../platform/macos.js';
 import { installWindows } from '../platform/windows.js';
-import { verifyConnection } from './verify.js';
+import { formatCommandFailure, verifyConnection } from './verify.js';
 import { promptSelfInstall } from './self-install.js';
 import { printGuidance } from './guidance.js';
+
+async function completeSetup(successMessage) {
+  let verified = false;
+
+  try {
+    verified = await verifyConnection();
+  } catch (error) {
+    p.cancel('Connection verification failed: ' + formatCommandFailure(error));
+    process.exit(1);
+  }
+
+  if (!verified) {
+    p.outro(pc.yellow('WARP installed, but it was not registered or connected.'));
+    return;
+  }
+
+  await promptSelfInstall();
+  printGuidance();
+  p.outro(pc.green(successMessage));
+}
 
 export async function runWizard() {
   p.intro(pc.bgCyan(pc.black(' WARP Wizard ')));
@@ -30,10 +50,7 @@ export async function runWizard() {
       return;
     }
     
-    await verifyConnection();
-    await promptSelfInstall();
-    printGuidance();
-    p.outro(pc.green('Done!'));
+    await completeSetup('Done!');
     return;
   }
 
@@ -83,9 +100,5 @@ export async function runWizard() {
     process.exit(1);
   }
 
-  await verifyConnection();
-  await promptSelfInstall();
-  printGuidance();
-  
-  p.outro(pc.green('WARP Wizard setup complete.'));
+  await completeSetup('WARP Wizard setup complete.');
 }
