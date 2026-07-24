@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com-DonArtkins:DonArtkins/warp-wizard.git"
+    "url": "https://github.com/DonArtkins/warp-wizard.git"
   },
   "keywords": [],
   "author": "",
@@ -25,5 +25,8 @@
   },
   "devDependencies": {
     "vitest": "^2.1.9"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
