@@ -1,25 +1,23 @@
 import { execa } from 'execa';
+import { isCommandAvailable } from './detect.js';
 
-export async function installArch(callbacks) {
+export async function installArch(callbacks, runner = execa) {
   // Check for yay or paru
   let helper = 'yay';
-  try {
-    await execa('command', ['-v', 'yay']);
-  } catch {
-    try {
-      await execa('command', ['-v', 'paru']);
+  if (!(await isCommandAvailable('yay', { runner, platform: 'linux' }))) {
+    if (await isCommandAvailable('paru', { runner, platform: 'linux' })) {
       helper = 'paru';
-    } catch {
+    } else {
       callbacks.onError('Neither yay nor paru found. Please install an AUR helper first.');
       throw new Error('No AUR helper');
     }
   }
   
   callbacks.onStart(`Installing cloudflare-warp-bin via ${helper}...`);
-  await execa(helper, ['-S', '--noconfirm', 'cloudflare-warp-bin']);
+  await runner(helper, ['-S', '--noconfirm', 'cloudflare-warp-bin']);
   
   callbacks.onStart('Enabling systemd service...');
-  await execa('sudo', ['systemctl', 'enable', '--now', 'warp-svc']);
+  await runner('sudo', ['systemctl', 'enable', '--now', 'warp-svc']);
   
   callbacks.onSuccess('WARP installed successfully via AUR.');
 }
