@@ -1,3 +1,3 @@
 #!/bin/sh
 set -e
-npx -y @artkins/warp-wizard update
+npx -y @donartkins/warp-wizard update

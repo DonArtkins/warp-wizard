@@ -53,23 +53,19 @@ If you are on a network where your ISP or upstream router uses DPI (Deep Packet 
 ## License
 MIT
 
-## Publishing to NPM
+## Publishing to GitHub Packages
 
-This tool is designed to be accessible globally via `npx` without needing to clone the repository. Publishing to the public NPM registry is **completely free** for open-source packages.
+This tool is designed to be accessible globally via `npx` without needing to clone the repository. It is published to GitHub Packages instead of the public NPM registry.
 
 ### How to publish
 
-1. First, create an NPM account at [npmjs.com](https://www.npmjs.com/) if you don't have one.
-2. In your terminal, log in to your account:
-   ```bash
-   npm login
-   ```
-3. Make sure your package name in `package.json` (currently `@donartkins/warp-wizard`) is unique. If you want to use an `@scope`, it must match your NPM username or an organization you own (e.g. `@yourusername/warp-wizard`).
-4. Publish the package publicly:
-   ```bash
-   npm publish --access public
-   ```
+Publishing is fully automated via GitHub Actions (`.github/workflows/publish.yml`).
+
+1. Update the `version` in `package.json`.
+2. Commit and push your changes to the `main` branch.
+3. Create a new GitHub Release with a tag matching the version (e.g., `v1.0.1`).
+4. The GitHub Actions workflow will automatically build and publish the package to GitHub Packages.
 
 ### What you need to know
-- **Versions**: Every time you publish, you must increment the `version` in `package.json`. You cannot overwrite an existing version on NPM.
-- **Global execution**: Once published, anyone in the world can run `npx -y @yourusername/warp-wizard` and it will automatically download and execute the latest version of your CLI wizard directly from NPM, zero installation required!
+- **Versions**: Every time you publish, you must increment the `version` in `package.json`. You cannot overwrite an existing version.
+- **Global execution**: Once published, anyone in the world (with the correct `.npmrc` configuration mapping `@donartkins` to GitHub Packages) can run `npx -y @donartkins/warp-wizard` and it will automatically download and execute the latest version of your CLI wizard directly from GitHub Packages, zero installation required!

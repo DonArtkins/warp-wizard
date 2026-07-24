@@ -12,6 +12,21 @@ Your division of responsibility is absolute: **The human owns approval and judgm
 3. `docs/FIBER_ROUTER_BUG.md` — the case study explaining *why* this tool exists (specifically to tunnel Postgres port 5432 past DPI middleboxes).
 4. `README.md` — public facing documentation.
 
+## CI/CD & Publishing
+
+**Package scope:** `@donartkins/warp-wizard` — published to **GitHub Packages** (`npm.pkg.github.com`), not npmjs.org.
+
+| File | Purpose |
+|---|---|
+| `.npmrc` | Scope mapping: `@donartkins:registry=https://npm.pkg.github.com` |
+| `.github/workflows/ci.yml` | Lint + unit tests on push/PR across `ubuntu-latest`, `macos-latest`, `windows-latest` (Node 22) |
+| `.github/workflows/publish.yml` | Publishes to GitHub Packages on release creation or manual dispatch |
+| `package.json` → `publishConfig` | Points `npm publish` at `https://npm.pkg.github.com` |
+
+**Release workflow:** Create a GitHub release (e.g. `gh release create v1.x.x`) → `publish.yml` triggers automatically → package is published via `GITHUB_TOKEN`.
+
+**Zero-install:** `npx @donartkins/warp-wizard` (requires `.npmrc` with scope mapping on the consumer side, or `--registry` flag).
+
 ## Required Skills
 
 **CRITICAL DIRECTIVE: AI agents MUST ALWAYS use Context7 and check for any specific agent skills.**
