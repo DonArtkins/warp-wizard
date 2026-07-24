@@ -23,6 +23,20 @@ npm run test
 3. Update the README.md with details of changes if applicable.
 4. Open a pull request against the `main` branch.
 
+## Maintainer Releases
+
+Pushing to `main` does not publish to NPM. Maintainers should use the GitHub Actions `Publish to NPM` workflow on `main`, choose the version bump, and let CI run tests, create the release commit/tag, create the GitHub Release, dry-run the package, and publish through NPM Trusted Publishing (OIDC).
+
+Local shortcut from a clean `main`:
+
+```bash
+npm run release:patch
+npm run release:minor
+npm run release:major
+```
+
+Every publish needs a new SemVer. Do not use long-lived NPM publish tokens. Sources: https://docs.npmjs.com/trusted-publishers/ and https://docs.npmjs.com/cli/v12/commands/npm-version/.
+
 ## Code of Conduct
 
 Please be respectful and considerate of others. Harassment or abusive behavior will not be tolerated.

@@ -57,15 +57,49 @@ MIT
 
 This tool is designed to be accessible globally via `npx` without needing to clone the repository. Publishing to the public NPM registry is **completely free** for open-source packages.
 
-### How to publish
+### What does and does not publish
 
-Publishing is fully automated via GitHub Actions (`.github/workflows/publish.yml`) using NPM Trusted Publishing (OIDC).
+Pushing code to `main` does **not** publish anything to NPM. A push only updates GitHub and runs CI.
 
-1. Update the `version` in `package.json`.
-2. Commit and push your changes to the `main` branch.
-3. Create a new GitHub Release with a tag matching the version (e.g., `v1.0.1`).
-4. The GitHub Actions workflow will automatically build and publish the package to the public NPM registry.
+Publishing is handled by GitHub Actions (`.github/workflows/publish.yml`) using NPM Trusted Publishing (OIDC), without long-lived NPM tokens.
 
-### What you need to know
-- **Versions**: Every time you publish, you must increment the `version` in `package.json`. You cannot overwrite an existing version.
-- **Global execution**: Once published, anyone in the world can run `npx -y warp-wizard-cli` and it will automatically download and execute the latest version of your CLI wizard directly from NPM, zero installation required!
+### Preferred release path
+
+1. Open GitHub Actions.
+2. Run the `Publish to NPM` workflow from `main`.
+3. Choose `patch`, `minor`, `major`, a prerelease bump, or an exact SemVer.
+4. The workflow runs tests, bumps `package.json` and `package-lock.json`, commits, tags `vX.Y.Z`, creates the GitHub Release, runs `npm publish --dry-run`, then publishes to NPM via OIDC.
+
+### Local maintainer shortcut
+
+From a clean `main` branch:
+
+```bash
+npm run release:patch   # 1.0.0 -> 1.0.1
+npm run release:minor   # 1.0.0 -> 1.1.0
+npm run release:major   # 1.0.0 -> 2.0.0
+```
+
+The helper runs tests, runs `npm version`, pushes the release commit/tag, and creates the GitHub Release with `gh`. That release triggers the publish workflow.
+
+### Manual fallback
+
+```bash
+npm version patch -m "chore(release): %s"
+git push origin main
+git push origin vX.Y.Z
+gh release create vX.Y.Z --verify-tag --title vX.Y.Z --generate-notes
+```
+
+### Version and security rules
+
+- Every publish needs a higher, never-before-published SemVer. NPM does not allow overwriting an existing version.
+- Do not run `npm publish` locally for normal releases.
+- Do not add an NPM publish token. Trusted Publishing uses OIDC from GitHub Actions.
+- NPM docs: https://docs.npmjs.com/trusted-publishers/
+- `npm version` docs: https://docs.npmjs.com/cli/v12/commands/npm-version/
+- GitHub Release event docs: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#release
+- GitHub `GITHUB_TOKEN` workflow-trigger behavior: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+- npm token change notice: https://github.blog/changelog/2026-07-08-npm-install-time-security-and-gat-bypass2fa-deprecation/
+
+Once published, anyone can run `npx -y warp-wizard-cli` and NPM will download and execute the latest released CLI.
