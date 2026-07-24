@@ -5,7 +5,7 @@ Cross-Platform Cloudflare WARP Installer & Manager CLI.
 
 Zero-install via npx:
 ```bash
-npx @artkins/warp-wizard
+npx @donartkins/warp-wizard
 ```
 
 Permanent self-install script:
@@ -64,7 +64,7 @@ This tool is designed to be accessible globally via `npx` without needing to clo
    ```bash
    npm login
    ```
-3. Make sure your package name in `package.json` (currently `@artkins/warp-wizard`) is unique. If you want to use an `@scope`, it must match your NPM username or an organization you own (e.g. `@yourusername/warp-wizard`).
+3. Make sure your package name in `package.json` (currently `@donartkins/warp-wizard`) is unique. If you want to use an `@scope`, it must match your NPM username or an organization you own (e.g. `@yourusername/warp-wizard`).
 4. Publish the package publicly:
    ```bash
    npm publish --access public
