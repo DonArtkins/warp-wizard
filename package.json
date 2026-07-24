@@ -18,12 +18,12 @@
     "warp-wizard": "bin/warp-wizard.js"
   },
   "dependencies": {
-    "@clack/prompts": "^1.7.0",
+    "@clack/prompts": "^0.7.0",
     "citty": "^0.2.2",
-    "execa": "^10.0.0",
+    "execa": "^8.0.1",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "vitest": "^4.1.10"
+    "vitest": "^2.1.9"
   }
 }
