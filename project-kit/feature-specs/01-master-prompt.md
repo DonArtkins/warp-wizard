@@ -74,7 +74,7 @@ Do not default to Foundrie's own web stack — this is a small, dependency-light
 
 ## Package / Branding
 
-- npm package: `@donartkins/warp-wizard` (published to GitHub Packages).
+- npm package: `@donartkins/warp-wizard` (published to NPM).
 - Zero-install entry point: `npx @donartkins/warp-wizard`.
 - Persistent command after opt-in self-install: `warp-wizard`.
 - First mention in any UI copy: "Cloudflare WARP (Cloudflare One Client)"; every mention after that: just "WARP" — Cloudflare's own rebrand is recent enough that users searching old docs/memory for "WARP" shouldn't be confused by the newer name appearing with no explanation.
@@ -122,8 +122,7 @@ warp-wizard/
 │   ├── update.sh
 │   └── update.ps1
 ├── .github/workflows/ci.yml         # lint + unit tests across ubuntu/macos/windows runners
-├── .github/workflows/publish.yml    # publish to GitHub Packages on release creation
-└── .npmrc                           # scope mapping for @donartkins -> npm.pkg.github.com
+└── .github/workflows/publish.yml    # publish to NPM on release creation (OIDC)
 ```
 
 **`.gitignore` (CRITICAL — set this up in the same commit as the initial scaffold):**

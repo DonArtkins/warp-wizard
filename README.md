@@ -53,19 +53,19 @@ If you are on a network where your ISP or upstream router uses DPI (Deep Packet 
 ## License
 MIT
 
-## Publishing to GitHub Packages
+## Publishing to NPM
 
-This tool is designed to be accessible globally via `npx` without needing to clone the repository. It is published to GitHub Packages instead of the public NPM registry.
+This tool is designed to be accessible globally via `npx` without needing to clone the repository. Publishing to the public NPM registry is **completely free** for open-source packages.
 
 ### How to publish
 
-Publishing is fully automated via GitHub Actions (`.github/workflows/publish.yml`).
+Publishing is fully automated via GitHub Actions (`.github/workflows/publish.yml`) using NPM Trusted Publishing (OIDC).
 
 1. Update the `version` in `package.json`.
 2. Commit and push your changes to the `main` branch.
 3. Create a new GitHub Release with a tag matching the version (e.g., `v1.0.1`).
-4. The GitHub Actions workflow will automatically build and publish the package to GitHub Packages.
+4. The GitHub Actions workflow will automatically build and publish the package to the public NPM registry.
 
 ### What you need to know
 - **Versions**: Every time you publish, you must increment the `version` in `package.json`. You cannot overwrite an existing version.
-- **Global execution**: Once published, anyone in the world (with the correct `.npmrc` configuration mapping `@donartkins` to GitHub Packages) can run `npx -y @donartkins/warp-wizard` and it will automatically download and execute the latest version of your CLI wizard directly from GitHub Packages, zero installation required!
+- **Global execution**: Once published, anyone in the world can run `npx -y @donartkins/warp-wizard` and it will automatically download and execute the latest version of your CLI wizard directly from NPM, zero installation required!

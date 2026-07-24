@@ -14,18 +14,16 @@ Your division of responsibility is absolute: **The human owns approval and judgm
 
 ## CI/CD & Publishing
 
-**Package scope:** `@donartkins/warp-wizard` — published to **GitHub Packages** (`npm.pkg.github.com`), not npmjs.org.
+**Package scope:** `@donartkins/warp-wizard` — published to **NPM** (`npmjs.org`).
 
 | File | Purpose |
 |---|---|
-| `.npmrc` | Scope mapping: `@donartkins:registry=https://npm.pkg.github.com` |
 | `.github/workflows/ci.yml` | Lint + unit tests on push/PR across `ubuntu-latest`, `macos-latest`, `windows-latest` (Node 22) |
-| `.github/workflows/publish.yml` | Publishes to GitHub Packages on release creation or manual dispatch |
-| `package.json` → `publishConfig` | Points `npm publish` at `https://npm.pkg.github.com` |
+| `.github/workflows/publish.yml` | Publishes to NPM on release creation via NPM Trusted Publishing (OIDC) |
 
-**Release workflow:** Create a GitHub release (e.g. `gh release create v1.x.x`) → `publish.yml` triggers automatically → package is published via `GITHUB_TOKEN`.
+**Release workflow:** Create a GitHub release (e.g. `gh release create v1.x.x`) → `publish.yml` triggers automatically → package is published via OIDC token.
 
-**Zero-install:** `npx @donartkins/warp-wizard` (requires `.npmrc` with scope mapping on the consumer side, or `--registry` flag).
+**Zero-install:** `npx @donartkins/warp-wizard` (works globally out-of-the-box).
 
 ## Required Skills
 
