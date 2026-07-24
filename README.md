@@ -38,6 +38,26 @@ curl -fsSL https://raw.githubusercontent.com/DonArtkins/warp-wizard/main/scripts
 
 If you are on a network where your ISP or upstream router uses DPI (Deep Packet Inspection) to drop specific traffic (like Postgres on port 5432), WARP tunnels that traffic and bypasses the DPI middlebox. Use `warp-wizard doctor` to automate checking for this specific DPI signature (TCP handshake completes, then resets).
 
+The Debian / Parrot OS path in the wizard intentionally follows the field-tested command sequence from [docs/FIBER_ROUTER_BUG.md](docs/FIBER_ROUTER_BUG.md) and [docs/README.md](docs/README.md):
+
+```bash
+# Add Cloudflare GPG key and repo
+curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+CODENAME=$(lsb_release -cs 2>/dev/null || echo "bookworm")
+if ! curl -s --head https://pkg.cloudflareclient.com/dists/$CODENAME/Release | grep -q "200 OK"; then CODENAME="bookworm"; fi
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $CODENAME main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+# Install WARP
+sudo apt-get update && sudo apt-get install cloudflare-warp
+
+# Register and connect
+warp-cli registration new
+warp-cli connect
+
+# Verify connection
+curl https://www.cloudflare.com/cdn-cgi/trace | grep warp=on
+```
+
 ## Platform Support
 
 | Platform | Support tier |

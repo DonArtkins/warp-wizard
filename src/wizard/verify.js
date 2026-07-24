@@ -2,6 +2,8 @@ import { execa } from 'execa';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 
+export const WARP_TRACE_COMMAND = 'curl https://www.cloudflare.com/cdn-cgi/trace | grep warp=on';
+
 export async function verifyConnection() {
   const s = p.spinner();
   s.start('Registering device...');
@@ -19,12 +21,8 @@ export async function verifyConnection() {
   await new Promise(r => setTimeout(r, 2000));
   
   try {
-    const { stdout } = await execa('curl', ['-s', 'https://www.cloudflare.com/cdn-cgi/trace/']);
-    if (stdout.includes('warp=on') || stdout.includes('warp=plus')) {
-      s.stop(pc.green('Connection verified (warp=on)'));
-    } else {
-      s.stop(pc.yellow('Connected, but trace did not show warp=on'));
-    }
+    await execa('bash', ['-c', WARP_TRACE_COMMAND]);
+    s.stop(pc.green('Connection verified (warp=on)'));
   } catch (e) {
     s.stop(pc.red('Failed to verify connection with Cloudflare trace'));
   }

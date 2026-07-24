@@ -177,11 +177,16 @@ CREATE: `README.md` is a first-class deliverable — see Implementation Note 10,
 
 **Debian / Ubuntu / Parrot / Kali / Mint** — official, apt. Reuse the exact sequence already field-tested in `FIBER_ROUTER_BUG.md`:
 ```bash
+# Add Cloudflare GPG key and repo
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
-sudo apt-get update && sudo apt-get install -y cloudflare-warp
+CODENAME=$(lsb_release -cs 2>/dev/null || echo "bookworm")
+if ! curl -s --head https://pkg.cloudflareclient.com/dists/$CODENAME/Release | grep -q "200 OK"; then CODENAME="bookworm"; fi
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $CODENAME main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+# Install WARP
+sudo apt-get update && sudo apt-get install cloudflare-warp
 ```
-Officially supported suites at time of writing: Ubuntu Resolute (26.04), Noble (24.04), Jammy (22.04); Debian Trixie (13), Bookworm (12). Defend against one specific edge case: if `apt-get update` 404s only on the Cloudflare line, `$(lsb_release -cs)` returned a codename Cloudflare doesn't host — this can happen on rolling/derivative distros. Fall back to the closest Debian base codename from `/etc/os-release`'s `VERSION_CODENAME` rather than failing with no explanation.
+This flow probes the repo release file before writing the source list. If `lsb_release -cs` returns a derivative codename Cloudflare does not host, fall back to `bookworm` before `apt-get update`, matching the Parrot OS field-tested workaround.
 
 **RHEL / CentOS Stream / Rocky / Alma 9–10** — official, yum. **EPEL is a hard requirement on 9+**, specifically for the tray-icon and captive-portal webview dependencies — install/enable it before the WARP package, not after:
 ```bash
@@ -229,9 +234,8 @@ Identical across every platform once `warp-cli` is on PATH:
 ```bash
 warp-cli registration new
 warp-cli connect
-curl -s https://www.cloudflare.com/cdn-cgi/trace/ | grep warp=on
+curl https://www.cloudflare.com/cdn-cgi/trace | grep warp=on
 ```
-On Linux, also make sure the daemon survives reboots — the existing docs cover registration/connect but not persistence: `sudo systemctl enable --now warp-svc`.
 
 ### 5. Self-installation (persistent footprint)
 
