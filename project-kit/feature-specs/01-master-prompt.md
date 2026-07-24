@@ -180,7 +180,7 @@ CREATE: `README.md` is a first-class deliverable — see Implementation Note 10,
 # Add Cloudflare GPG key and repo
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
 CODENAME=$(lsb_release -cs 2>/dev/null || echo "bookworm")
-if ! curl -s --head https://pkg.cloudflareclient.com/dists/$CODENAME/Release | grep -q "200 OK"; then CODENAME="bookworm"; fi
+if ! curl -fsS --head "https://pkg.cloudflareclient.com/dists/$CODENAME/Release" >/dev/null; then CODENAME="bookworm"; fi
 echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $CODENAME main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
 
 # Install WARP
@@ -232,10 +232,12 @@ Fall back to the official installer if winget is unavailable. Installs to `C:\Pr
 
 Identical across every platform once `warp-cli` is on PATH:
 ```bash
-warp-cli registration new
-warp-cli connect
+warp-cli --accept-tos registration new
+warp-cli --accept-tos connect
 curl https://www.cloudflare.com/cdn-cgi/trace | grep warp=on
 ```
+
+The wizard must ask the user to accept Cloudflare WARP's Terms of Service before passing `--accept-tos`. The flag is global to `warp-cli`, so it belongs before the subcommand; this avoids the spawned CLI failing because it cannot display Cloudflare's own TOS prompt in its child process.
 
 ### 5. Self-installation (persistent footprint)
 
@@ -297,11 +299,11 @@ In order: one-line description; both install paths as copy-pasteable one-liners 
 
 | Command | Purpose |
 |---|---|
-| `warp-cli registration new` | First-time device registration — no account needed for consumer WARP |
+| `warp-cli --accept-tos registration new` | First-time device registration after the wizard asks for Terms acceptance — no account needed for consumer WARP |
 | `warp-cli registration delete` | Deregister the device (part of a clean `--purge` uninstall) |
 | `warp-cli registration license <key>` | Apply a WARP+ license key |
 | `warp-cli registration show` | Current registration/account details |
-| `warp-cli connect` / `warp-cli disconnect` / `warp-cli reconnect` | Toggle the tunnel |
+| `warp-cli --accept-tos connect` / `warp-cli disconnect` / `warp-cli reconnect` | Toggle the tunnel; the wizard uses `--accept-tos` only after its own explicit Terms prompt |
 | `warp-cli status` | Current connection state — the primitive `warp-wizard status` wraps |
 | `warp-cli mode <mode>` | Switch mode: `warp`, `doh` (DNS-only), `warp+doh`, `proxy` (SOCKS5) — `warp-cli mode --help` for the authoritative current list |
 | `warp-cli tunnel protocol set WireGuard\|MASQUE` | Switch transport (MASQUE is default) |
