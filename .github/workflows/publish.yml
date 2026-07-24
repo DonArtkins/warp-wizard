@@ -2,24 +2,158 @@ name: Publish to NPM
 
 on:
   release:
-    types: [created]
+    types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer bump or exact version: patch, minor, major, prepatch, preminor, premajor, prerelease, or 1.2.3"
+        required: true
+        default: patch
+      prerelease_id:
+        description: "Prerelease identifier used with prepatch/preminor/premajor/prerelease"
+        required: false
+        default: rc
+      npm_dist_tag:
+        description: "npm dist-tag to publish under. Use latest for stable releases; use next/beta/rc for prereleases."
+        required: true
+        default: latest
+      dry_run:
+        description: "Run versioning and npm publish dry-run without pushing, creating a release, or publishing."
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22.14.0"
+  NPM_REGISTRY_URL: "https://registry.npmjs.org"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    if: github.repository == 'DonArtkins/warp-wizard'
 
     steps:
-      - uses: actions/checkout@v5
-      
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
         with:
-          node-version: 22
-          registry-url: 'https://registry.npmjs.org'
-          
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: ${{ env.NPM_REGISTRY_URL }}
+          package-manager-cache: false
+
+      - name: Install npm with trusted publishing support
+        run: npm install -g npm@^11.5.1
+
       - run: npm ci
-      
-      - run: npm publish --access public
+
+      - run: npm run build --if-present
+
+      - run: npm run test
+
+      - name: Prepare release metadata
+        id: release_metadata
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          VERSION_INPUT: ${{ inputs.version }}
+          PRERELEASE_ID: ${{ inputs.prerelease_id }}
+          NPM_DIST_TAG_INPUT: ${{ inputs.npm_dist_tag }}
+        run: |
+          set -euo pipefail
+
+          VERSION_INPUT="${VERSION_INPUT:-}"
+          PRERELEASE_ID="${PRERELEASE_ID:-rc}"
+          NPM_DIST_TAG_INPUT="${NPM_DIST_TAG_INPUT:-latest}"
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+              echo "::error::Automated releases must be dispatched from the main branch."
+              exit 1
+            fi
+
+            if [[ ! "$VERSION_INPUT" =~ ^(patch|minor|major|prepatch|preminor|premajor|prerelease|[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?)$ ]]; then
+              echo "::error::Invalid version input: $VERSION_INPUT"
+              exit 1
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git pull --ff-only origin main
+
+            VERSION_ARGS=("$VERSION_INPUT" "-m" "chore(release): %s")
+            case "$VERSION_INPUT" in
+              prepatch|preminor|premajor|prerelease)
+                VERSION_ARGS+=("--preid" "$PRERELEASE_ID")
+                ;;
+            esac
+
+            npm version "${VERSION_ARGS[@]}"
+          else
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+              echo "::error::Release tags must start with v and contain a SemVer version, for example v1.0.1."
+              exit 1
+            fi
+          fi
+
+          PACKAGE_VERSION="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
+          TAG="v$PACKAGE_VERSION"
+
+          if [[ "$EVENT_NAME" == "release" && "$GITHUB_REF_NAME" != "$TAG" ]]; then
+            echo "::error::Release tag $GITHUB_REF_NAME does not match package.json version $PACKAGE_VERSION."
+            exit 1
+          fi
+
+          NPM_DIST_TAG="$NPM_DIST_TAG_INPUT"
+          IS_PRERELEASE="false"
+          if [[ "$PACKAGE_VERSION" == *-* ]]; then
+            IS_PRERELEASE="true"
+            if [[ "$EVENT_NAME" == "release" ]]; then
+              NPM_DIST_TAG="next"
+            fi
+            if [[ "$NPM_DIST_TAG" == "latest" ]]; then
+              echo "::error::Prerelease package versions must use a non-latest npm dist-tag."
+              exit 1
+            fi
+          fi
+
+          echo "version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+          echo "npm_dist_tag=$NPM_DIST_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Verify package contents
+        run: npm publish --dry-run --access public --tag "${{ steps.release_metadata.outputs.npm_dist_tag }}"
+
+      - name: Push release commit and create GitHub Release
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release_metadata.outputs.tag }}
+          IS_PRERELEASE: ${{ steps.release_metadata.outputs.is_prerelease }}
+        run: |
+          set -euo pipefail
+
+          git push origin HEAD:main
+          git push origin "$RELEASE_TAG"
+
+          RELEASE_FLAGS=(--verify-tag --title "$RELEASE_TAG" --generate-notes)
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            RELEASE_FLAGS+=(--prerelease)
+          fi
+
+          gh release create "$RELEASE_TAG" "${RELEASE_FLAGS[@]}"
+
+      - name: Publish package to npm
+        if: github.event_name == 'release' || inputs.dry_run == false
+        run: npm publish --access public --tag "${{ steps.release_metadata.outputs.npm_dist_tag }}"

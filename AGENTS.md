@@ -18,10 +18,27 @@ Your division of responsibility is absolute: **The human owns approval and judgm
 
 | File | Purpose |
 |---|---|
-| `.github/workflows/ci.yml` | Lint + unit tests on push/PR across `ubuntu-latest`, `macos-latest`, `windows-latest` (Node 22) |
-| `.github/workflows/publish.yml` | Publishes to NPM on release creation via NPM Trusted Publishing (OIDC) |
+| `.github/workflows/ci.yml` | Build-if-present + unit tests on push/PR across `ubuntu-latest`, `macos-latest`, `windows-latest` (Node 22.14.0), plus package dry-run on Ubuntu |
+| `.github/workflows/publish.yml` | Automated versioning, GitHub Release creation, package dry-run, and NPM publish via NPM Trusted Publishing (OIDC) |
+| `scripts/bump-version.js` | Local maintainer helper for test → `npm version` → push commit/tag → create GitHub Release |
 
-**Release workflow:** Create a GitHub release (e.g. `gh release create v1.x.x`) → `publish.yml` triggers automatically → package is published via OIDC token.
+**Release workflow:**
+
+1. A plain push to `main` **never publishes to NPM**. It only updates GitHub and runs CI.
+2. Preferred automated path: GitHub Actions → `Publish to NPM` → `Run workflow` on `main` → choose `patch`, `minor`, `major`, a prerelease bump, or an exact SemVer. The workflow runs tests, bumps `package.json` and `package-lock.json`, commits, tags `vX.Y.Z`, creates the GitHub Release, verifies package contents with `npm publish --dry-run`, then publishes to NPM via OIDC.
+3. Local maintainer path: from a clean `main`, run `npm run release:patch`, `npm run release:minor`, or `npm run release:major`. The helper runs tests, runs `npm version`, pushes the release commit/tag, and creates the GitHub Release with `gh`. That human-created release triggers `publish.yml`.
+4. Manual fallback: run `npm version patch|minor|major -m "chore(release): %s"`, push `main` and the tag, then publish a GitHub Release for that exact tag.
+5. Every publish must use a never-before-published SemVer. NPM rejects reusing an existing package version permanently.
+6. Do **not** add or use long-lived NPM publish tokens. This package uses NPM Trusted Publishing (OIDC); the package's trusted publisher must point at repository `DonArtkins/warp-wizard`, workflow filename `publish.yml`, with `npm publish` allowed.
+
+**Release-source facts agents must preserve:**
+
+- NPM Trusted Publishing uses OIDC and removes the need for long-lived publish tokens: https://docs.npmjs.com/trusted-publishers/
+- Trusted Publishing requires a GitHub Actions trusted-publisher workflow filename, and the workflow needs `id-token: write`: https://docs.npmjs.com/trusted-publishers/
+- `npm version` updates package metadata and, in a clean git repo, creates the release commit and tag: https://docs.npmjs.com/cli/v12/commands/npm-version/
+- GitHub Release workflows should listen for `release: types: [published]`, especially when drafts/prereleases are involved: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#release
+- Events created by the default `GITHUB_TOKEN` do not recursively trigger most other workflows, so manual-dispatch release automation must bump, release, and publish inside the same workflow run: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+- GitHub/npm announced that 2FA-bypass tokens lose sensitive account-management powers around August 2026 and direct publish power around January 2027, so OIDC is the required automation path: https://github.blog/changelog/2026-07-08-npm-install-time-security-and-gat-bypass2fa-deprecation/
 
 **Zero-install:** `npx warp-wizard-cli` (works globally out-of-the-box).
 

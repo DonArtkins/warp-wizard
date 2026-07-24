@@ -79,6 +79,24 @@ Do not default to Foundrie's own web stack — this is a small, dependency-light
 - Persistent command after opt-in self-install: `warp-wizard`.
 - First mention in any UI copy: "Cloudflare WARP (Cloudflare One Client)"; every mention after that: just "WARP" — Cloudflare's own rebrand is recent enough that users searching old docs/memory for "WARP" shouldn't be confused by the newer name appearing with no explanation.
 
+## CI/CD & Release Automation
+
+- A plain push to `main` never publishes to NPM. It only updates GitHub and runs CI.
+- `.github/workflows/publish.yml` is the single publishing workflow trusted by NPM. It must keep using NPM Trusted Publishing (OIDC), not a long-lived NPM publish token.
+- The preferred release path is GitHub Actions → `Publish to NPM` → `Run workflow` on `main` with a version input (`patch`, `minor`, `major`, prerelease bump, or exact SemVer). The workflow must run tests, run `npm version`, push the version commit and tag, create the GitHub Release, run `npm publish --dry-run`, then publish to NPM.
+- The manual fallback is: `npm version patch|minor|major -m "chore(release): %s"` → push `main` and the `vX.Y.Z` tag → publish a GitHub Release for that exact tag. A published GitHub Release triggers `publish.yml`.
+- Local maintainers can use `npm run release:patch`, `npm run release:minor`, or `npm run release:major` from a clean `main`; the helper runs tests, runs `npm version`, pushes the release commit/tag, and creates the GitHub Release with `gh`.
+- Every NPM publish requires a never-before-published SemVer. Never attempt to reuse an existing version; NPM rejects overwrites.
+- The package's NPM Trusted Publisher must be configured for repository `DonArtkins/warp-wizard`, workflow filename `publish.yml`, allowed action `npm publish`.
+- `publish.yml` must listen for `release: types: [published]`, not only `created`, because GitHub's release docs call out draft/prerelease edge cases for release activity types.
+- If `workflow_dispatch` creates a release using the default `GITHUB_TOKEN`, do not expect a second workflow to publish it. GitHub documents that `GITHUB_TOKEN`-created events do not recursively trigger most workflows, so the manual-dispatch path must publish inside the same workflow run.
+- Source references to preserve in README/AGENTS when editing this contract:
+  - NPM Trusted Publishing / OIDC: https://docs.npmjs.com/trusted-publishers/
+  - `npm version`: https://docs.npmjs.com/cli/v12/commands/npm-version/
+  - GitHub release event: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#release
+  - GitHub workflow-from-workflow trigger behavior: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+  - npm token changes announced July 8, 2026: https://github.blog/changelog/2026-07-08-npm-install-time-security-and-gat-bypass2fa-deprecation/
+
 ## Files Owned
 
 ```
@@ -121,8 +139,8 @@ warp-wizard/
 │   ├── uninstall.ps1
 │   ├── update.sh
 │   └── update.ps1
-├── .github/workflows/ci.yml         # lint + unit tests across ubuntu/macos/windows runners
-└── .github/workflows/publish.yml    # publish to NPM on release creation (OIDC)
+├── .github/workflows/ci.yml         # build-if-present + unit tests across ubuntu/macos/windows, package dry-run on ubuntu
+└── .github/workflows/publish.yml    # automated versioning + GitHub Release + publish to NPM via OIDC
 ```
 
 **`.gitignore` (CRITICAL — set this up in the same commit as the initial scaffold):**
@@ -311,7 +329,7 @@ Most hosted CI containers can't load a WireGuard interface or approve a macOS ne
 - `shellcheck` clean on every `.sh` script; `PSScriptAnalyzer` clean on every `.ps1` script.
 - Unit tests around the pure logic — OS/distro detection from a fixture `/etc/os-release`, shell-rc marker injection/removal, `state.json` read/write — run in normal CI (`ubuntu-latest` / `macos-latest` / `windows-latest` matrix in `.github/workflows/ci.yml`).
 - A manual smoke-test checklist (see Acceptance Criteria) run by hand, once per platform family, before a release — the actual install step needs a real machine or VM with root and a real network.
-- `npm run build` and `npm publish --dry-run` succeed.
+- `npm run build --if-present`, `npm run test`, and `npm publish --dry-run` succeed before any NPM publish.
 
 ## Acceptance Criteria
 

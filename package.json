@@ -4,7 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "publish:dry-run": "npm publish --dry-run --access public",
+    "release:patch": "node scripts/bump-version.js patch",
+    "release:minor": "node scripts/bump-version.js minor",
+    "release:major": "node scripts/bump-version.js major",
+    "release:prepatch": "node scripts/bump-version.js prepatch",
+    "release:preminor": "node scripts/bump-version.js preminor",
+    "release:premajor": "node scripts/bump-version.js premajor",
+    "release:prerelease": "node scripts/bump-version.js prerelease"
   },
   "repository": {
     "type": "git",
