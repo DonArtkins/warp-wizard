@@ -25,7 +25,7 @@ npm run test
 
 ## Maintainer Releases
 
-Pushing to `main` does not publish to NPM. Maintainers should use the GitHub Actions `Publish to NPM` workflow on `main`, choose the version bump, and let CI run tests, create the release commit/tag, create the GitHub Release, dry-run the package, and publish through NPM Trusted Publishing (OIDC).
+Pushing to `main` does not publish to NPM. Maintainers should use the GitHub Actions `Publish to NPM` workflow on `main`, choose the version bump, and let CI run tests, create the release commit/tag, dry-run the package, create the GitHub Release, and publish through NPM Trusted Publishing (OIDC).
 
 Local shortcut from a clean `main`:
 

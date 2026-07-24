@@ -68,7 +68,7 @@ Publishing is handled by GitHub Actions (`.github/workflows/publish.yml`) using 
 1. Open GitHub Actions.
 2. Run the `Publish to NPM` workflow from `main`.
 3. Choose `patch`, `minor`, `major`, a prerelease bump, or an exact SemVer.
-4. The workflow runs tests, bumps `package.json` and `package-lock.json`, commits, tags `vX.Y.Z`, creates the GitHub Release, runs `npm publish --dry-run`, then publishes to NPM via OIDC.
+4. The workflow runs tests, bumps `package.json` and `package-lock.json`, commits, tags `vX.Y.Z`, runs `npm publish --dry-run`, creates the GitHub Release, then publishes to NPM via OIDC.
 
 ### Local maintainer shortcut
 

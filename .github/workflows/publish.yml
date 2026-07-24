@@ -52,7 +52,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install npm with trusted publishing support
-        run: npm install -g npm@^11.5.1
+        run: npm install -g npm@11.5.1
 
       - run: npm ci
 
@@ -81,7 +81,7 @@ jobs:
               exit 1
             fi
 
-            if [[ ! "$VERSION_INPUT" =~ ^(patch|minor|major|prepatch|preminor|premajor|prerelease|[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?)$ ]]; then
+            if ! VERSION_TO_VALIDATE="$VERSION_INPUT" node --input-type=module -e "import { isValidVersionInput } from './scripts/release-utils.js'; process.exit(isValidVersionInput(process.env.VERSION_TO_VALIDATE) ? 0 : 1);"; then
               echo "::error::Invalid version input: $VERSION_INPUT"
               exit 1
             fi
@@ -114,9 +114,8 @@ jobs:
           fi
 
           NPM_DIST_TAG="$NPM_DIST_TAG_INPUT"
-          IS_PRERELEASE="false"
-          if [[ "$PACKAGE_VERSION" == *-* ]]; then
-            IS_PRERELEASE="true"
+          IS_PRERELEASE="$(PACKAGE_VERSION_TO_CHECK="$PACKAGE_VERSION" node --input-type=module -e "import { isPrereleaseVersion } from './scripts/release-utils.js'; console.log(isPrereleaseVersion(process.env.PACKAGE_VERSION_TO_CHECK) ? 'true' : 'false');")"
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
             if [[ "$EVENT_NAME" == "release" ]]; then
               NPM_DIST_TAG="next"
             fi
@@ -132,7 +131,9 @@ jobs:
           echo "npm_dist_tag=$NPM_DIST_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Verify package contents
-        run: npm publish --dry-run --access public --tag "${{ steps.release_metadata.outputs.npm_dist_tag }}"
+        env:
+          NPM_DIST_TAG: ${{ steps.release_metadata.outputs.npm_dist_tag }}
+        run: npm publish --dry-run --access public --tag "$NPM_DIST_TAG"
 
       - name: Push release commit and create GitHub Release
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false
@@ -144,8 +145,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git push origin HEAD:main
-          git push origin "$RELEASE_TAG"
+          git push --atomic origin HEAD:main "$RELEASE_TAG"
 
           RELEASE_FLAGS=(--verify-tag --title "$RELEASE_TAG" --generate-notes)
           if [[ "$IS_PRERELEASE" == "true" ]]; then
@@ -156,4 +156,6 @@ jobs:
 
       - name: Publish package to npm
         if: github.event_name == 'release' || inputs.dry_run == false
-        run: npm publish --access public --tag "${{ steps.release_metadata.outputs.npm_dist_tag }}"
+        env:
+          NPM_DIST_TAG: ${{ steps.release_metadata.outputs.npm_dist_tag }}
+        run: npm publish --access public --tag "$NPM_DIST_TAG"

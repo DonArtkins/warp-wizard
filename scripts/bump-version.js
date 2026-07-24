@@ -1,11 +1,13 @@
 import { execa } from 'execa';
 import { exit } from 'process';
 import {
+  assertNpmPackageVersionIsUnpublished,
   buildNpmVersionArgs,
   isPrereleaseVersion,
   isValidVersionInput,
 } from './release-utils.js';
 
+const packageName = 'warp-wizard-cli';
 const bumpType = process.argv[2];
 
 if (!isValidVersionInput(bumpType)) {
@@ -58,6 +60,8 @@ async function readPackageVersion() {
     await execa('npm', ['version', ...buildNpmVersionArgs(bumpType, prereleaseId)], { stdio: 'inherit' });
 
     const version = await readPackageVersion();
+    await assertNpmPackageVersionIsUnpublished({ packageName, version, execaCommand: execa });
+
     const tag = `v${version}`;
     const releaseArgs = ['release', 'create', tag, '--verify-tag', '--title', tag, '--generate-notes'];
 
@@ -65,8 +69,7 @@ async function readPackageVersion() {
       releaseArgs.push('--prerelease');
     }
 
-    await execa('git', ['push', 'origin', 'main'], { stdio: 'inherit' });
-    await execa('git', ['push', 'origin', tag], { stdio: 'inherit' });
+    await execa('git', ['push', '--atomic', 'origin', 'main', tag], { stdio: 'inherit' });
     await execa('gh', releaseArgs, { stdio: 'inherit' });
 
     console.log(`Release ${tag} created. GitHub Actions will publish warp-wizard-cli to npm via Trusted Publishing.`);
