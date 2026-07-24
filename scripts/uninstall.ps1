@@ -3,7 +3,7 @@ if (Get-Command warp-cli -ErrorAction SilentlyContinue) {
     warp-cli disconnect
 }
 if ($Purge) {
-    npx -y @donartkins/warp-wizard uninstall --purge
+    npx -y warp-wizard-cli uninstall --purge
 } else {
-    npx -y @donartkins/warp-wizard uninstall
+    npx -y warp-wizard-cli uninstall
 }

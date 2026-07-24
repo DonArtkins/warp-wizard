@@ -3,4 +3,4 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     Write-Error "npm is required to install warp-wizard."
     exit 1
 }
-npx -y @donartkins/warp-wizard
+npx -y warp-wizard-cli

@@ -14,7 +14,7 @@ Your division of responsibility is absolute: **The human owns approval and judgm
 
 ## CI/CD & Publishing
 
-**Package scope:** `@donartkins/warp-wizard` — published to **NPM** (`npmjs.org`).
+**Package scope:** `warp-wizard-cli` — published to **NPM** (`npmjs.org`).
 
 | File | Purpose |
 |---|---|
@@ -23,7 +23,7 @@ Your division of responsibility is absolute: **The human owns approval and judgm
 
 **Release workflow:** Create a GitHub release (e.g. `gh release create v1.x.x`) → `publish.yml` triggers automatically → package is published via OIDC token.
 
-**Zero-install:** `npx @donartkins/warp-wizard` (works globally out-of-the-box).
+**Zero-install:** `npx warp-wizard-cli` (works globally out-of-the-box).
 
 ## Required Skills
 

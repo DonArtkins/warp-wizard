@@ -5,7 +5,7 @@ Cross-Platform Cloudflare WARP Installer & Manager CLI.
 
 Zero-install via npx:
 ```bash
-npx @donartkins/warp-wizard
+npx warp-wizard-cli
 ```
 
 Permanent self-install script:
@@ -68,4 +68,4 @@ Publishing is fully automated via GitHub Actions (`.github/workflows/publish.yml
 
 ### What you need to know
 - **Versions**: Every time you publish, you must increment the `version` in `package.json`. You cannot overwrite an existing version.
-- **Global execution**: Once published, anyone in the world can run `npx -y @donartkins/warp-wizard` and it will automatically download and execute the latest version of your CLI wizard directly from NPM, zero installation required!
+- **Global execution**: Once published, anyone in the world can run `npx -y warp-wizard-cli` and it will automatically download and execute the latest version of your CLI wizard directly from NPM, zero installation required!

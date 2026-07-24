@@ -1,1 +1,1 @@
-npx -y @donartkins/warp-wizard update
+npx -y warp-wizard-cli update

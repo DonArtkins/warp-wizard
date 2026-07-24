@@ -74,8 +74,8 @@ Do not default to Foundrie's own web stack — this is a small, dependency-light
 
 ## Package / Branding
 
-- npm package: `@donartkins/warp-wizard` (published to NPM).
-- Zero-install entry point: `npx @donartkins/warp-wizard`.
+- npm package: `warp-wizard-cli` (published to NPM).
+- Zero-install entry point: `npx warp-wizard-cli`.
 - Persistent command after opt-in self-install: `warp-wizard`.
 - First mention in any UI copy: "Cloudflare WARP (Cloudflare One Client)"; every mention after that: just "WARP" — Cloudflare's own rebrand is recent enough that users searching old docs/memory for "WARP" shouldn't be confused by the newer name appearing with no explanation.
 
@@ -232,7 +232,7 @@ Shell-rc edits are idempotent and reversible: wrap the injected block in `# >>> 
 
 These need to work two ways: piped straight from a URL (`curl -fsSL <url>/install.sh | sh`, matching the "install a GitHub program" pattern the user asked for) and run locally after a `git clone`. Keep the Linux/macOS scripts POSIX-sh compatible, not bash-only, so they work in more shells. Ship a genuine PowerShell `.ps1` for Windows, not a translated bash script.
 
-- `install.sh` / `install.ps1` — run OS detection → install-flow → self-install; the same logic path as `npx @donartkins/warp-wizard`, just via a different distribution channel.
+- `install.sh` / `install.ps1` — run OS detection → install-flow → self-install; the same logic path as `npx warp-wizard-cli`, just via a different distribution channel.
 - `uninstall.sh` / `uninstall.ps1` — two levels: remove `warp-wizard` only (default) vs. `--purge` (also runs the platform module's own uninstall for the actual WARP client). Always `warp-cli disconnect` before removing anything.
 - `update.sh` / `update.ps1` — check the wizard's own npm version and the installed WARP version separately; support a non-interactive `--check` flag for scripting/cron.
 
@@ -315,7 +315,7 @@ Most hosted CI containers can't load a WireGuard interface or approve a macOS ne
 
 ## Acceptance Criteria
 
-- [ ] `npx @donartkins/warp-wizard` on a clean Parrot OS (or other Debian-based) machine installs, registers, connects, and verifies WARP end-to-end using the flow field-tested in `FIBER_ROUTER_BUG.md`.
+- [ ] `npx warp-wizard-cli` on a clean Parrot OS (or other Debian-based) machine installs, registers, connects, and verifies WARP end-to-end using the flow field-tested in `FIBER_ROUTER_BUG.md`.
 - [ ] The same flow succeeds on at least one RHEL/CentOS-family box with EPEL auto-handled, one Fedora box, one Arch box via AUR, one macOS box via Homebrew, and one Windows box via winget.
 - [ ] The openSUSE path clearly labels itself community/unofficial in the UI before doing anything.
 - [ ] Re-running the wizard on an already-installed machine detects that state and offers repair/reconnect instead of reinstalling.
