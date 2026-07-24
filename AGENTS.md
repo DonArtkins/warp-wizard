@@ -25,7 +25,7 @@ Your division of responsibility is absolute: **The human owns approval and judgm
 **Release workflow:**
 
 1. A plain push to `main` **never publishes to NPM**. It only updates GitHub and runs CI.
-2. Preferred automated path: GitHub Actions → `Publish to NPM` → `Run workflow` on `main` → choose `patch`, `minor`, `major`, a prerelease bump, or an exact SemVer. The workflow runs tests, bumps `package.json` and `package-lock.json`, commits, tags `vX.Y.Z`, creates the GitHub Release, verifies package contents with `npm publish --dry-run`, then publishes to NPM via OIDC.
+2. Preferred automated path: GitHub Actions → `Publish to NPM` → `Run workflow` on `main` → choose `patch`, `minor`, `major`, a prerelease bump, or an exact SemVer. The workflow runs tests, bumps `package.json` and `package-lock.json`, commits, tags `vX.Y.Z`, verifies package contents with `npm publish --dry-run`, creates the GitHub Release, then publishes to NPM via OIDC.
 3. Local maintainer path: from a clean `main`, run `npm run release:patch`, `npm run release:minor`, or `npm run release:major`. The helper runs tests, runs `npm version`, pushes the release commit/tag, and creates the GitHub Release with `gh`. That human-created release triggers `publish.yml`.
 4. Manual fallback: run `npm version patch|minor|major -m "chore(release): %s"`, push `main` and the tag, then publish a GitHub Release for that exact tag.
 5. Every publish must use a never-before-published SemVer. NPM rejects reusing an existing package version permanently.

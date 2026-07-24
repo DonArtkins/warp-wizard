@@ -83,7 +83,7 @@ Do not default to Foundrie's own web stack — this is a small, dependency-light
 
 - A plain push to `main` never publishes to NPM. It only updates GitHub and runs CI.
 - `.github/workflows/publish.yml` is the single publishing workflow trusted by NPM. It must keep using NPM Trusted Publishing (OIDC), not a long-lived NPM publish token.
-- The preferred release path is GitHub Actions → `Publish to NPM` → `Run workflow` on `main` with a version input (`patch`, `minor`, `major`, prerelease bump, or exact SemVer). The workflow must run tests, run `npm version`, push the version commit and tag, create the GitHub Release, run `npm publish --dry-run`, then publish to NPM.
+- The preferred release path is GitHub Actions → `Publish to NPM` → `Run workflow` on `main` with a version input (`patch`, `minor`, `major`, prerelease bump, or exact SemVer). The workflow must run tests, run `npm version`, push the version commit and tag, run `npm publish --dry-run`, create the GitHub Release, then publish to NPM.
 - The manual fallback is: `npm version patch|minor|major -m "chore(release): %s"` → push `main` and the `vX.Y.Z` tag → publish a GitHub Release for that exact tag. A published GitHub Release triggers `publish.yml`.
 - Local maintainers can use `npm run release:patch`, `npm run release:minor`, or `npm run release:major` from a clean `main`; the helper runs tests, runs `npm version`, pushes the release commit/tag, and creates the GitHub Release with `gh`.
 - Every NPM publish requires a never-before-published SemVer. Never attempt to reuse an existing version; NPM rejects overwrites.
