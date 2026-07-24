@@ -1,4 +1,3 @@
-import os from 'node:os';
 import { execa } from 'execa';
 import fs from 'node:fs/promises';
 
@@ -33,20 +32,29 @@ export async function detectPlatform() {
   return { os: 'unknown', arch };
 }
 
-export async function isWarpInstalled() {
+function shellQuote(value) {
+  return `'${String(value).replaceAll("'", "'\\''")}'`;
+}
+
+export async function isCommandAvailable(command, options = {}) {
+  const {
+    runner = execa,
+    platform = process.platform
+  } = options;
+
   try {
-    await execa('command', ['-v', 'warp-cli']);
-    return true;
-  } catch (e) {
-    // Windows might need a different check
-    if (process.platform === 'win32') {
-      try {
-        await execa('where', ['warp-cli']);
-        return true;
-      } catch (e2) {
-        return false;
-      }
+    if (platform === 'win32') {
+      await runner('where', [command]);
+    } else {
+      await runner('sh', ['-c', `command -v ${shellQuote(command)}`]);
     }
+
+    return true;
+  } catch {
     return false;
   }
+}
+
+export async function isWarpInstalled(options = {}) {
+  return isCommandAvailable('warp-cli', options);
 }

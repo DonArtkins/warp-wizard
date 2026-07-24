@@ -10,6 +10,7 @@ import { installWindows } from '../platform/windows.js';
 import { formatCommandFailure, verifyConnection } from './verify.js';
 import { promptSelfInstall } from './self-install.js';
 import { printGuidance } from './guidance.js';
+import { createManagedSpinner } from '../lib/spinner.js';
 
 async function completeSetup(successMessage) {
   let verified = false;
@@ -87,15 +88,17 @@ export async function runWizard() {
   }
 
   const s = p.spinner();
+  const installSpinner = createManagedSpinner(s);
   const callbacks = {
-    onStart: (msg) => s.start(msg),
-    onSuccess: (msg) => s.stop(msg),
-    onError: (msg) => s.stop(pc.red(msg))
+    onStart: (msg) => installSpinner.start(msg),
+    onSuccess: (msg) => installSpinner.stop(msg),
+    onError: (msg) => installSpinner.stop(pc.red(msg))
   };
 
   try {
     await installFn(callbacks);
   } catch (e) {
+    callbacks.onError('Installation failed: ' + formatCommandFailure(e));
     p.cancel('Installation failed: ' + e.message);
     process.exit(1);
   }

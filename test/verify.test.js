@@ -122,6 +122,17 @@ describe('verify command contract', () => {
     expect(runner).toHaveBeenCalledTimes(1);
   });
 
+  it('returns false when Cloudflare trace verification fails', async () => {
+    const runner = vi.fn(async (command, args) => {
+      if (command === 'bash' && args[1] === WARP_TRACE_COMMAND) {
+        throw commandError('warp=off');
+      }
+    });
+    const prompts = createPrompts();
+
+    await expect(verifyConnection({ runner, prompts, waitMs: 0 })).resolves.toBe(false);
+  });
+
   it('classifies registration errors narrowly', () => {
     expect(isMissingRegistrationError(commandError('Registration missing'))).toBe(true);
     expect(isAlreadyRegisteredError(commandError('Device is already registered'))).toBe(true);

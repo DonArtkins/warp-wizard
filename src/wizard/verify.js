@@ -1,6 +1,7 @@
 import { execa } from 'execa';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
+import { createManagedSpinner } from '../lib/spinner.js';
 
 export const WARP_TRACE_COMMAND = 'curl https://www.cloudflare.com/cdn-cgi/trace | grep warp=on';
 export const WARP_REGISTRATION_SHOW_ARGS = ['--accept-tos', 'registration', 'show'];
@@ -85,12 +86,17 @@ export async function verifyConnection(options = {}) {
     return false;
   }
 
-  const s = prompts.spinner();
+  const s = createManagedSpinner(prompts.spinner());
 
   await ensureRegistration(runner, s, colors);
   
   s.start('Connecting WARP...');
-  await runner('warp-cli', WARP_CONNECT_ARGS);
+  try {
+    await runner('warp-cli', WARP_CONNECT_ARGS);
+  } catch (error) {
+    s.stop(colors.red('Failed to connect WARP.'));
+    throw error;
+  }
   
   s.start('Verifying traffic...');
   // wait a bit for connection to establish
@@ -101,6 +107,7 @@ export async function verifyConnection(options = {}) {
     s.stop(colors.green('Connection verified (warp=on)'));
   } catch (error) {
     s.stop(colors.red('Failed to verify connection with Cloudflare trace'));
+    return false;
   }
 
   return true;
